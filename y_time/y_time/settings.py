@@ -76,12 +76,12 @@ WSGI_APPLICATION = 'y_time.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DATABASE', 'ytime'),
-        'USER': os.environ.get('MYSQL_USER', 'ytimeuser'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'secret'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'ytime'),
+        'USER': os.environ.get('POSTGRES_USER', 'ytimeuser'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'secret'),
         'HOST': 'db',
-        'PORT': 3306,
+        'PORT': 5432,
     }
 }
 
