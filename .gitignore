@@ -4,6 +4,7 @@ venv/
 *.log
 db.sqlite3
 db.sqlite3-journal
+staticfiles/
 .vscode/
 .idea/
 .DS_Store
