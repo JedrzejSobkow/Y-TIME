@@ -3,7 +3,6 @@ services:
     build: ./y_time
     volumes:
       - ./y_time:/app
-      - /app/__pycache__
     ports:
       - "8000:8000"
     env_file:
