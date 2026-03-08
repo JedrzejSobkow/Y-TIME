@@ -1,8 +1,8 @@
 services:
-  y-money-app:
-    build: ./y-money
+  y_money-app:
+    build: ./y_money
     volumes:
-      - ./y-money:/app
+      - ./y_money:/app
     ports:
       - "8000:8000"
     env_file:
