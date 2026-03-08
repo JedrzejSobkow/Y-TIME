@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "y_time.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
+CMD python manage.py collectstatic --noinput && \
+    uvicorn y_time.asgi:application --host 0.0.0.0 --port 8000 --reload
