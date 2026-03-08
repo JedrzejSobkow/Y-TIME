@@ -1,1 +1,1 @@
-# y-money
+# y_money
