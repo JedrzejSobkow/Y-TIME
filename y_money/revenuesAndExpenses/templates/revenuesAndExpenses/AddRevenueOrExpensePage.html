@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}
+  Panel główny
+{% endblock %}
+
+{% block content %}
+  <style>
+    .bg-transition {
+      transition: all 0.4s ease;
+    }
+    .bg-revenue-light {
+      background-color: #f8fff9;
+      border-top: 5px solid #198754 !important;
+    }
+    .bg-expense-light {
+      background-color: #fff8f8;
+      border-top: 5px solid #dc3545 !important;
+    }
+  </style>
+
+  <div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-8">
+        <div id="mainCard" class="card shadow-lg border-0 bg-transition bg-revenue-light" style="border-radius: 15px;">
+          <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+              <h2 id="formTitle" class="fw-bold text-dark">Zarejestruj Wpływ</h2>
+              <p class="text-muted">Wypełnij szczegóły transakcji poniżej.</p>
+            </div>
+
+            <form action="#" method="POST">
+              {% csrf_token %}
+
+              <div class="mb-4 text-center">
+                <label class="form-label fw-bold mb-3">Rodzaj operacji</label>
+                <div class="btn-group d-flex" role="group">
+                  <input type="radio" class="btn-check" name="transaction_type" id="revenue" value="revenue" autocomplete="off" checked onchange="updateUI()" />
+                  <label class="btn btn-outline-success w-100 py-3 fw-bold shadow-sm" for="revenue">Wpływ</label>
+
+                  <input type="radio" class="btn-check" name="transaction_type" id="expense" value="expense" autocomplete="off" onchange="updateUI()" />
+                  <label class="btn btn-outline-danger w-100 py-3 fw-bold shadow-sm" for="expense">Wydatek</label>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="amount" class="form-label fw-bold">Kwota</label>
+                <div class="input-group input-group-lg">
+                  <input type="number" step="0.01" class="form-control" id="amount" name="amount" placeholder="0.00" required />
+                  <select class="form-select fw-bold fs-6" name="currency" style="max-width: 100px; background-color: #f8f9fa;">
+                    <option value="PLN" selected>PLN</option>
+                    <option value="EUR">EUR</option>
+                    <option value="USD">USD</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label id="labelTitle" for="description" class="form-label fw-bold">Tytuł wpływu</label>
+                <input type="text" class="form-control form-control-lg" id="description" name="description" placeholder="Wpisz nazwę..." required />
+              </div>
+
+              <div class="mb-3">
+                <label for="wallet" class="form-label fw-bold">Przypisz do portfela</label>
+                <select class="form-select form-select-lg" id="wallet" name="wallet" required>
+                  <option value="" disabled selected>Wybierz portfel...</option>
+                  <option value="wallet_cash">Gotówka / Portfel</option>
+                  <option value="bank_account">Konto bankowe</option>
+                  <option value="savings">Oszczędności</option>
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label for="date" class="form-label fw-bold">Data i godzina transakcji</label>
+                <input type="datetime-local" class="form-control form-control-lg" id="date" name="date" required onchange="checkDate()" />
+
+                <div id="dateWarning" class="alert alert-warning mt-2 d-none shadow-sm" style="font-size: 0.9rem;">
+                  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                  <strong>Uwaga:</strong> Wybrano przyszłą datę. Transakcja zostanie zaplanowana, a stan konta zmieni się dopiero w wybranym momencie.
+                </div>
+              </div>
+
+              <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100 shadow-sm fw-bold py-3 mt-2">Zapisz Wpływ</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updateUI() {
+      const card = document.getElementById('mainCard')
+      const title = document.getElementById('formTitle')
+      const labelTitle = document.getElementById('labelTitle')
+      const submitBtn = document.getElementById('submitBtn')
+      const isRevenue = document.getElementById('revenue').checked
+    
+      if (isRevenue) {
+        card.className = 'card shadow-lg border-0 bg-transition bg-revenue-light'
+        title.innerText = 'Zarejestruj Wpływ'
+        labelTitle.innerText = 'Tytuł wpływu'
+        submitBtn.className = 'btn btn-success btn-lg w-100 shadow-sm fw-bold py-3 mt-2'
+        submitBtn.innerText = 'Zapisz Wpływ'
+      } else {
+        card.className = 'card shadow-lg border-0 bg-transition bg-expense-light'
+        title.innerText = 'Zarejestruj Wydatek'
+        labelTitle.innerText = 'Tytuł wydatku'
+        submitBtn.className = 'btn btn-danger btn-lg w-100 shadow-sm fw-bold py-3 mt-2'
+        submitBtn.innerText = 'Zapisz Wydatek'
+      }
+    }
+    
+    function checkDate() {
+      const dateInput = document.getElementById('date').value
+      const warning = document.getElementById('dateWarning')
+    
+      if (!dateInput) {
+        warning.classList.add('d-none');
+        return;
+      }    
+      const selectedDate = new Date(dateInput)
+      const now = new Date()
+    
+      if (selectedDate > now) {
+        warning.classList.remove('d-none')
+      } else {
+        warning.classList.add('d-none')
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function () {
+      const now = new Date()
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+      const currentDateTime = now.toISOString().slice(0, 16)
+    
+      document.getElementById('date').value = currentDateTime
+    })
+  </script>
+{% endblock %}
