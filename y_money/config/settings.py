@@ -38,12 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'friends.apps.FriendsConfig',
-    'goals.apps.GoalsConfig',
-    'home.apps.HomeConfig',
-    'myFinances.apps.MyfinancesConfig',
-    'revenuesAndExpenses.apps.RevenuesandexpensesConfig',
-    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -57,12 +51,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'y_money.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'y_money/templates'],
+        'DIRS': [BASE_DIR / 'config/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -75,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'y_money.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
