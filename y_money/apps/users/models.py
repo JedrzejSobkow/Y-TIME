@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from core.models import TimeStampedModel
+from apps.core.models import TimeStampedModel
 from django.core.exceptions import ValidationError
 
 
