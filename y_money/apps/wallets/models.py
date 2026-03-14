@@ -1,6 +1,7 @@
 from django.db import models
 from apps.core.models import TimeStampedModel
 from apps.users.models import Profile
+from decimal import Decimal
 
 class Wallet(TimeStampedModel):
     class Currency(models.TextChoices):
@@ -30,7 +31,7 @@ class Wallet(TimeStampedModel):
     # TODO VERIFY IF INCOME OR OUTCOME
     @property
     def balance(self):
-        return self.transactions.aggregate(total=models.Sum('amount'))['total'] or 0.00
+        return self.transactions.aggregate(total=models.Sum('amount'))['total'] or Decimal("0.00")
 
     class Meta:
         constraints = [
