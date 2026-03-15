@@ -53,7 +53,7 @@ class FriendRequest(TimeStampedModel):
         self.status = self.Status.ACCEPTED
         self.save()
         
-        Friendship.objects.create(self.from_profile, self.to_profile)
+        Friendship.objects.create(from_profile = self.from_profile, to_profile = self.to_profile)
     
     
     
