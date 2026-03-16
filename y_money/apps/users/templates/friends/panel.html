@@ -23,13 +23,40 @@
       const tabs = document.querySelectorAll('.tab-btn')
       const contentDiv = document.getElementById('tab-content')
     
+      function refreshActiveTab() {
+        const activeTab = document.querySelector('.tab-btn.active')
+        if (activeTab) loadTab(activeTab.dataset.url)
+      }
+    
+      function attachButtonHandlers() {
+        const actionConfigs = [
+          { selector: '.btn-accept', urlPrefix: '/friends/request/accept/' },
+          { selector: '.btn-reject', urlPrefix: '/friends/request/reject/' },
+          { selector: '.btn-cancel', urlPrefix: '/friends/request/cancel/' }
+          { selector: '.btn-remove', urlPrefix: '/friends/remove/' },
+        ]
+    
+        actionConfigs.forEach(({ selector, urlPrefix }) => {
+          document.querySelectorAll(selector).forEach((btn) => {
+            btn.addEventListener('click', function () {
+              const id = this.dataset.requestId || this.dataset.friendId
+              const url = `${urlPrefix}${id}/`
+    
+              postJson(url)
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) refreshActiveTab()
+                })
+            })
+          })
+        })
+      }
+    
       function loadTab(url) {
         contentDiv.innerHTML = '<div class="loader">Ładowanie...</div>'
     
         fetch(url, {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
           .then((response) => {
             if (!response.ok) throw new Error('Błąd sieci')
@@ -37,6 +64,7 @@
           })
           .then((html) => {
             contentDiv.innerHTML = html
+            attachButtonHandlers()
           })
           .catch((error) => {
             contentDiv.innerHTML = '<div class="error">Wystąpił błąd ładowania</div>'

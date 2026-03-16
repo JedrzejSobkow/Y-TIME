@@ -52,7 +52,19 @@ class SentRequestsListView(LoginRequiredMixin, ListView):
     
 
     
+class SendFriendRequestView(LoginRequiredMixin):
+    pass
     
+class RemoveFriendView(LoginRequiredMixin):
+    pass
     
+class AcceptFriendRequestView(LoginRequiredMixin):
+    pass
+
+class RejectFriendRequestView(LoginRequiredMixin):
+    pass
+
+class CancelFriendRequestView(LoginRequiredMixin):
+    pass
     
     
