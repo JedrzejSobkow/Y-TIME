@@ -1,0 +1,26 @@
+{% if friends %}
+    <div class="friends-list">
+        {% for friend in friends %}
+        <div class="friend-item">
+            <div class="friend-info">
+                <div class="avatar">
+                    {{ friend.user.first_name|first|default:friend.user.username|first|upper }}
+                </div>
+                <div>
+                    <div class="friend-name">
+                        {{ friend.user.get_full_name|default:friend.user.username }}
+                    </div>
+                    <div class="friend-username">
+                        @{{ friend.user.username }}
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-remove" data-friend-id="{{ friend.id }}">
+                Usuń
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="empty-message">Nie masz jeszcze znajomych</p>
+{% endif %}
