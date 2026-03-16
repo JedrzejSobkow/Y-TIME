@@ -1,6 +1,16 @@
 from django.urls import path
 from .views import UserLoginView, UserLogoutView, UserRegisterView
-from .views import FriendsPanelView, FriendsListView, PendingRequestsListView, SentRequestsListView
+from .views import (
+    FriendsPanelView, 
+    FriendsListView, 
+    PendingRequestsListView, 
+    SentRequestsListView,
+    SendFriendRequestView,
+    RemoveFriendView,
+    AcceptFriendRequestView,
+    RejectFriendRequestView,
+    CancelFriendRequestView
+)
 
 urlpatterns = [
     # TODO move it to the core urls
@@ -12,8 +22,9 @@ urlpatterns = [
     path('friends/friends_list', FriendsListView.as_view(), name='friends_list'),
     path('friends/pending_list', PendingRequestsListView.as_view(), name='pending_list'),
     path('friends/sent_list', SentRequestsListView.as_view(), name='sent_list'),
-    # path('friends/add/<int:profile_id>/', SendFriendRequestView.as_view(), name='send-friend-request'),
-    # path('friends/request/accept/<int:request_id>/', AcceptFriendRequestView.as_view(), name='accept-friend-request'),
-    # path('friends/request/reject/<int:request_id>/', RejectFriendRequestView.as_view(), name='reject-friend-request'),
-    # path('friends/request/cancel/<int:request_id>/', CancelFriendRequestView.as_view(), name='cancel-friend-request'),
+    path('friends/add/<int:profile_id>/', SendFriendRequestView.as_view(), name='send-friend-request'),
+    path('friends/remove/<int:profile_id>/', RemoveFriendView.as_view(), name='remove-friend'),
+    path('friends/request/accept/<int:request_id>/', AcceptFriendRequestView.as_view(), name='accept-friend-request'),
+    path('friends/request/reject/<int:request_id>/', RejectFriendRequestView.as_view(), name='reject-friend-request'),
+    path('friends/request/cancel/<int:request_id>/', CancelFriendRequestView.as_view(), name='cancel-friend-request'),
 ]
