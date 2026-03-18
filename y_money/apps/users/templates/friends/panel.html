@@ -7,6 +7,7 @@
 
 {% block content %}
 {% comment %} #TODO USE BOOTSTRAP INSTEAD OF PLAIN CSS {% endcomment %}
+{% comment %} #TODO Make alerts in modal smooth {% endcomment %}
   <div class="friends-panel">
     <div class="panel-header">
       <h1>Panel znajomych</h1>
@@ -29,6 +30,25 @@
         <span class="modal-close">&times;</span>
       </div>
       <div class="modal-body">
+        <form id="invite-form" method="POST">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="profile-id">ID profilu:</label>
+            <input type="number" 
+                   id="profile-id" 
+                   name="profile_id" 
+                   class="form-control" 
+                   placeholder="Wprowadź ID profilu" 
+                   min="1" 
+                   required>
+            <small class="form-text text-muted">Wprowadź numer ID profilu użytkownika, którego chcesz zaprosić</small>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Wyślij zaproszenie</button>
+            <button type="button" class="btn btn-secondary modal-close-btn">Anuluj</button>
+          </div>
+        </form>
+        <div id="invite-message" style="display: none;" class="alert"></div>
       </div>
     </div>
   </div>
@@ -40,6 +60,9 @@
       const inviteBtn = document.getElementById('invite-friend-btn')
       const modal = document.getElementById('invite-modal')
       const closeBtn = document.querySelector('.modal-close')
+      const closeFormBtn = document.querySelector('.modal-close-btn')
+      const inviteForm = document.getElementById('invite-form')
+      const inviteMessage = document.getElementById('invite-message')
     
       function refreshActiveTab() {
         const activeTab = document.querySelector('.tab-btn.active')
@@ -92,20 +115,79 @@
     
       function openModal() {
         modal.style.display = 'block'
+        inviteForm.reset()
+        inviteMessage.style.display = 'none'
+        inviteMessage.classList.remove('alert-success', 'alert-error')
       }
     
       function closeModal() {
         modal.style.display = 'none'
       }
     
+      function showMessage(message, isSuccess) {
+        inviteMessage.classList.remove('alert-success', 'alert-error')
+        
+        if (isSuccess) {
+          inviteMessage.classList.add('alert-success')
+        } else {
+          inviteMessage.classList.add('alert-error')
+        }
+        
+        inviteMessage.textContent = message
+        inviteMessage.style.display = 'block'
+        
+        if (isSuccess) {
+          setTimeout(() => {
+            closeModal()
+            refreshActiveTab()
+          }, 1500)
+        }
+      }
+    
       inviteBtn.addEventListener('click', openModal)
     
       closeBtn.addEventListener('click', closeModal)
+      
+      if (closeFormBtn) {
+        closeFormBtn.addEventListener('click', closeModal)
+      }
     
       window.addEventListener('click', function(event) {
         if (event.target === modal) {
           closeModal()
         }
+      })
+    
+      inviteForm.addEventListener('submit', function(event) {
+        event.preventDefault()
+        
+        inviteMessage.style.display = 'none'
+        inviteMessage.classList.remove('alert-success', 'alert-error')
+        
+        const profileId = document.getElementById('profile-id').value
+        const url = `/users/friends/add/${profileId}/`
+        
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showMessage('Zaproszenie zostało wysłane!', true)
+          } else {
+            showMessage(data.error || 'Wystąpił błąd podczas wysyłania zaproszenia', false)
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error)
+          showMessage('Wystąpił błąd połączenia', false)
+        })
       })
     
       tabs.forEach((tab) => {
@@ -121,5 +203,4 @@
       }
     })
   </script>
-
 {% endblock %}
