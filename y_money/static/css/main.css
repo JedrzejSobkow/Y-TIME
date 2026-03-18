@@ -1,147 +1,226 @@
-
 .friends-panel {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.panel-header h1 {
+    margin: 0;
 }
 
 .tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
 }
 
 .tab-btn {
-  padding: 10px 20px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 5px 5px 0 0;
-  transition: all 0.2s;
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.2s;
 }
 
 .tab-btn:hover {
-  background: #f0f0f0;
+    background: #f0f0f0;
 }
 
 .tab-btn.active {
-  background: #007bff;
-  color: white;
+    background: #007bff;
+    color: white;
 }
 
 .tab-content {
-  min-height: 400px;
-  padding: 20px;
-  border: 1px solid #e0e0e0;
-  border-radius: 5px;
+    min-height: 400px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
 }
 
-.loader {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-  font-style: italic;
+/* Przycisk zaproszenia */
+.btn-invite {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
 }
 
-.error {
-  color: #dc3545;
-  text-align: center;
-  padding: 20px;
-  background: #f8d7da;
-  border-radius: 5px;
+.btn-invite:hover {
+    background-color: #45a049;
 }
 
 /* Style dla list */
 .friend-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .friend-item:hover {
-  background: #f9f9f9;
+    background: #f9f9f9;
 }
 
 .friend-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #007bff;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
 }
 
 .friend-name {
-  font-weight: 500;
+    font-weight: 500;
 }
 
 .friend-username {
-  color: #666;
-  font-size: 0.9em;
+    color: #666;
+    font-size: 0.9em;
 }
 
+/* Wspólne style dla przycisków */
 .btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
 }
 
 .btn-remove {
-  background: #dc3545;
-  color: white;
+    background: #dc3545;
+    color: white;
 }
 
 .btn-remove:hover {
-  background: #c82333;
+    background: #c82333;
 }
 
 .btn-accept {
-  background: #28a745;
-  color: white;
+    background: #28a745;
+    color: white;
 }
 
 .btn-accept:hover {
-  background: #218838;
+    background: #218838;
 }
 
 .btn-reject {
-  background: #dc3545;
-  color: white;
+    background: #dc3545;
+    color: white;
 }
 
 .btn-reject:hover {
-  background: #c82333;
+    background: #c82333;
 }
 
 .btn-cancel {
-  background: #ffc107;
-  color: black;
+    background: #ffc107;
+    color: black;
 }
 
 .btn-cancel:hover {
-  background: #e0a800;
+    background: #e0a800;
+}
+
+/* Komunikaty */
+.loader {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}
+
+.error {
+    color: #dc3545;
+    text-align: center;
+    padding: 20px;
+    background: #f8d7da;
+    border-radius: 5px;
 }
 
 .empty-message {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-  font-style: italic;
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Style modala */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modal-close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #343a40;
+}
+
+.modal-body {
+    padding: 20px;
+    min-height: 100px;
 }
