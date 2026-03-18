@@ -6,8 +6,12 @@
 {% endblock %}
 
 {% block content %}
+{% comment %} #TODO USE BOOTSTRAP INSTEAD OF PLAIN CSS {% endcomment %}
   <div class="friends-panel">
-    <h1>Panel znajomych</h1>
+    <div class="panel-header">
+      <h1>Panel znajomych</h1>
+      <button id="invite-friend-btn" class="btn-invite">Zaproś do znajomych</button>
+    </div>
 
     <div class="tabs">
       <button class="tab-btn active" data-url="{% url 'friends_list' %}">Znajomi</button>
@@ -18,10 +22,24 @@
     <div id="tab-content" class="tab-content"></div>
   </div>
 
+  <div id="invite-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Zaproś do znajomych</h2>
+        <span class="modal-close">&times;</span>
+      </div>
+      <div class="modal-body">
+      </div>
+    </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const tabs = document.querySelectorAll('.tab-btn')
       const contentDiv = document.getElementById('tab-content')
+      const inviteBtn = document.getElementById('invite-friend-btn')
+      const modal = document.getElementById('invite-modal')
+      const closeBtn = document.querySelector('.modal-close')
     
       function refreshActiveTab() {
         const activeTab = document.querySelector('.tab-btn.active')
@@ -71,6 +89,24 @@
             console.error(error)
           })
       }
+    
+      function openModal() {
+        modal.style.display = 'block'
+      }
+    
+      function closeModal() {
+        modal.style.display = 'none'
+      }
+    
+      inviteBtn.addEventListener('click', openModal)
+    
+      closeBtn.addEventListener('click', closeModal)
+    
+      window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          closeModal()
+        }
+      })
     
       tabs.forEach((tab) => {
         tab.addEventListener('click', function () {
