@@ -1,0 +1,147 @@
+
+.friends-panel {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px 5px 0 0;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #f0f0f0;
+}
+
+.tab-btn.active {
+  background: #007bff;
+  color: white;
+}
+
+.tab-content {
+  min-height: 400px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+}
+
+.loader {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
+
+.error {
+  color: #dc3545;
+  text-align: center;
+  padding: 20px;
+  background: #f8d7da;
+  border-radius: 5px;
+}
+
+/* Style dla list */
+.friend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.friend-item:hover {
+  background: #f9f9f9;
+}
+
+.friend-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.friend-name {
+  font-weight: 500;
+}
+
+.friend-username {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-remove {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-remove:hover {
+  background: #c82333;
+}
+
+.btn-accept {
+  background: #28a745;
+  color: white;
+}
+
+.btn-accept:hover {
+  background: #218838;
+}
+
+.btn-reject {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-reject:hover {
+  background: #c82333;
+}
+
+.btn-cancel {
+  background: #ffc107;
+  color: black;
+}
+
+.btn-cancel:hover {
+  background: #e0a800;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
