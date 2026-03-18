@@ -1,10 +1,13 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView, ListView, TemplateView
+from django.views.generic import CreateView, ListView, TemplateView, View
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from django.urls import reverse_lazy
+from django.http import JsonResponse
 
 from .forms import RegisterForm
-from .models import Profile
+from .models import Profile, FriendRequest, Friendship
 
 
 # TODO move it to the core views
@@ -32,8 +35,7 @@ class FriendsListView(LoginRequiredMixin, ListView):
     context_object_name = "friends"
     
     def get_queryset(self):
-        profile = Profile.objects.select_related('user').get(user=self.request.user)
-        return profile.get_friends()
+        return self.request.user.profile.get_friends()
     
 class PendingRequestsListView(LoginRequiredMixin, ListView):
     template_name = "friends/partials/pending_list.html"
@@ -52,19 +54,62 @@ class SentRequestsListView(LoginRequiredMixin, ListView):
     
 
     
-class SendFriendRequestView(LoginRequiredMixin):
+class SendFriendRequestView(LoginRequiredMixin, View):
+    def post(self, request, profile_id):
+        try:
+            from_profile = request.user.profile
+            to_profile = get_object_or_404(Profile, id = profile_id)
+            
+            if from_profile == to_profile:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Cannot send friend request to yourself"
+                }, status = 400)
+                
+            if Friendship.objects.filter(
+                Q(profile1 = from_profile, profile2 = to_profile) |
+                Q(profile1 = to_profile, profile2 = from_profile)
+            ).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': "You are already friends"
+                }, status = 400)
+                
+            if FriendRequest.objects.filter(
+                Q(from_profile = from_profile, to_profile = to_profile) |
+                Q(from_profile = to_profile, to_profile = from_profile)
+            ).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': "Friend request already exists"
+                }, status = 400)
+                
+            friend_request = FriendRequest.objects.create(
+                from_profile = from_profile,
+                to_profile = to_profile
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': "Friend request sent"
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status = 400)
+    
+class RemoveFriendView(LoginRequiredMixin, View):
     pass
     
-class RemoveFriendView(LoginRequiredMixin):
-    pass
-    
-class AcceptFriendRequestView(LoginRequiredMixin):
+class AcceptFriendRequestView(LoginRequiredMixin, View):
     pass
 
-class RejectFriendRequestView(LoginRequiredMixin):
+class RejectFriendRequestView(LoginRequiredMixin, View):
     pass
 
-class CancelFriendRequestView(LoginRequiredMixin):
+class CancelFriendRequestView(LoginRequiredMixin, View):
     pass
     
     
