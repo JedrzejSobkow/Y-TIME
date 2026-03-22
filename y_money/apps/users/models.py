@@ -29,12 +29,9 @@ class Profile(TimeStampedModel):
         ).select_related('from_profile__user')
     
     def get_sent_friend_requests(self):
-        return Profile.objects.select_related(
-            "user"
-        ).filter(
-            received_friend_requests__from_profile = self,
-            received_friend_requests__status = FriendRequest.Status.PENDING
-        )
+        return self.sent_friend_requests.filter(
+            status=FriendRequest.Status.PENDING
+        ).select_related('to_profile__user')
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
