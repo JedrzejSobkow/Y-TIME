@@ -89,6 +89,8 @@ class SendFriendRequestView(LoginRequiredMixin, View):
                 
             elif existing_friend_request and not is_pending:
                 existing_friend_request.status = FriendRequest.Status.PENDING
+                existing_friend_request.from_profile = from_profile
+                existing_friend_request.to_profile = to_profile
                 existing_friend_request.save()
                 return JsonResponse({
                     'success': True,
