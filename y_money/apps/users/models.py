@@ -88,11 +88,11 @@ class FriendRequest(TimeStampedModel):
             raise ValidationError("You are already friends with this user")
         
         
-    def accept(self, profile):
+    def accept(self, accepting_profile):
         if self.status != self.Status.PENDING:
             raise ValidationError("Request is not pending")
         
-        if self.to_profile != profile:
+        if self.to_profile != accepting_profile:
             raise ValidationError("You cannot accept this request")
         
         with transaction.atomic():
@@ -100,21 +100,21 @@ class FriendRequest(TimeStampedModel):
             self.save()
             Friendship.objects.create(profile1 = self.from_profile, profile2 = self.to_profile)
         
-    def reject(self, profile):
+    def reject(self, rejecting_profile):
         if self.status != self.Status.PENDING:
             raise ValidationError("Request is not pending")
         
-        if self.to_profile != profile:
+        if self.to_profile != rejecting_profile:
             raise ValidationError("You cannot reject this request")
         
         self.status = self.Status.REJECTED
         self.save()
         
-    def cancel(self, profile):
+    def cancel(self, cancelling_profile):
         if self.status != self.Status.PENDING:
             raise ValidationError("Request is not pending")
         
-        if self.from_profile != profile:
+        if self.from_profile != cancelling_profile:
             raise ValidationError("You cannot cancel this request")
         
         self.status = self.Status.CANCELLED

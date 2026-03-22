@@ -151,7 +151,7 @@ class AcceptFriendRequestView(LoginRequiredMixin, View):
             if not related_friend_request:     
                 return JsonResponse({
                 'success': False,
-                'message': f"This friend request does not exist. {request_id}"
+                'message': f"This friend request does not exist."
             })
                 
             request_from = related_friend_request.from_profile
@@ -179,7 +179,7 @@ class RejectFriendRequestView(LoginRequiredMixin, View):
             if not related_friend_request:     
                 return JsonResponse({
                 'success': False,
-                'message': f"This friend request does not exist. {request_id}"
+                'message': f"This friend request does not exist."
             })
                 
             request_from = related_friend_request.from_profile
@@ -198,6 +198,31 @@ class RejectFriendRequestView(LoginRequiredMixin, View):
             }, status = 400)
 
 class CancelFriendRequestView(LoginRequiredMixin, View):
-    pass
+    def post(self, request, request_id):
+        try:
+            request_from = request.user.profile
+            
+            related_friend_request = FriendRequest.objects.filter(id=request_id).first()
+                        
+            if not related_friend_request:     
+                return JsonResponse({
+                'success': False,
+                'message': f"This friend request does not exist."
+            })
+                
+            related_friend_request.reject(request_from)
+            
+            request_to = related_friend_request.to_profile
+            
+            return JsonResponse({
+                'success': True,
+                'message': f"Cancelled friend request to {str(request_to)}."
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status = 400)
     
     
