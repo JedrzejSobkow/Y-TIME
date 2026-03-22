@@ -210,7 +210,7 @@ class CancelFriendRequestView(LoginRequiredMixin, View):
                 'message': f"This friend request does not exist."
             })
                 
-            related_friend_request.reject(request_from)
+            related_friend_request.cancel(request_from)
             
             request_to = related_friend_request.to_profile
             
