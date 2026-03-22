@@ -101,7 +101,33 @@ class SendFriendRequestView(LoginRequiredMixin, View):
             }, status = 400)
     
 class RemoveFriendView(LoginRequiredMixin, View):
-    pass
+    def post(self, request, profile_id):
+        try:
+            removing_user = request.user.profile
+            user_to_be_removed = get_object_or_404(Profile, id = profile_id)
+                
+            friendship = Friendship.objects.filter(
+                Q(profile1 = removing_user, profile2 = user_to_be_removed) |
+                Q(profile1 = user_to_be_removed, profile2 = removing_user)
+            ).first()
+            if not friendship:
+                return JsonResponse({
+                    'success': False,
+                    'error': "You are not in a friendship with that user"
+                }, status = 400)
+                
+            friendship.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': f"Friendship with user {str(user_to_be_removed)} has been removed"
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status = 400)
     
 class AcceptFriendRequestView(LoginRequiredMixin, View):
     pass
