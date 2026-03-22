@@ -24,12 +24,9 @@ class Profile(TimeStampedModel):
         )
     
     def get_pending_friend_requests(self):
-        return Profile.objects.select_related(
-            "user"
-        ).filter(
-            sent_friend_requests__to_profile = self,
-            sent_friend_requests__status = FriendRequest.Status.PENDING
-        )
+        return self.received_friend_requests.filter(
+            status=FriendRequest.Status.PENDING
+        ).select_related('from_profile__user')
     
     def get_sent_friend_requests(self):
         return Profile.objects.select_related(
@@ -125,7 +122,10 @@ class FriendRequest(TimeStampedModel):
         
         self.status = self.Status.CANCELLED
         self.save()
-    
+        
+    def is_pending(self):
+        return self.status == self.Status.PENDING
+        
     
     
 class Friendship(TimeStampedModel):

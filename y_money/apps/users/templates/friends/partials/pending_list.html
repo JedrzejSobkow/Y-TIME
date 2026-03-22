@@ -4,14 +4,14 @@
         <div class="friend-item">
             <div class="friend-info">
                 <div class="avatar">
-                    {{ request.user.first_name|first|default:request.user.username|first|upper }}
+                    {{ request.from_profile.user.first_name|first|default:request.from_profile.user.username|first|upper }}
                 </div>
                 <div>
                     <div class="friend-name">
-                        {{ request.user.get_full_name|default:request.user.username }}
+                        {{ request.from_profile.user.get_full_name|default:request.from_profile.user.username }}
                     </div>
                     <div class="friend-username">
-                        @{{ request.user.username }}
+                        @{{ request.from_profile.user.username }}
                     </div>
                 </div>
             </div>
