@@ -82,8 +82,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'ytime'),
-        'USER': os.environ.get('POSTGRES_USER', 'ytimeuser'),
+        'NAME': os.environ.get('POSTGRES_DB', 'ymoney'),
+        'USER': os.environ.get('POSTGRES_USER', 'ymoney'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'secret'),
         'HOST': 'db',
         'PORT': 5432,
@@ -139,18 +139,23 @@ USE_I18N = True
 USE_TZ = True
 
 # Security settings for production
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+CSRF_COOKIE_SECURE = False      # TODO SET True WHEN SSL CONFIGURED
+SESSION_COOKIE_SECURE = False   # TODO SET True WHEN SSL CONFIGURED
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_DOMAIN = None
+SESSION_COOKIE_DOMAIN = None
+
 if DEBUG == False:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-    CSRF_COOKIE_HTTPONLY = True
     SESSION_COOKIE_HTTPONLY = True
-    SECURE_HSTS_SECONDS = 31536000 # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    # TODO UNCOMMENT WHEN SSL CONFIGURED
+    # SECURE_SSL_REDIRECT = True
+    # SECURE_HSTS_SECONDS = 31536000
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
