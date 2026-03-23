@@ -80,22 +80,23 @@ class SendFriendRequestView(LoginRequiredMixin, View):
                 Q(from_profile = to_profile, to_profile = from_profile)
             ).first()
             
-            is_pending = existing_friend_request.is_pending()
-            if existing_friend_request and is_pending:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Friend request already exists"
-                }, status = 400)
-                
-            elif existing_friend_request and not is_pending:
-                existing_friend_request.status = FriendRequest.Status.PENDING
-                existing_friend_request.from_profile = from_profile
-                existing_friend_request.to_profile = to_profile
-                existing_friend_request.save()
-                return JsonResponse({
-                    'success': True,
-                    'message': "Friend request resent"
-                })
+            if existing_friend_request:
+                is_pending = existing_friend_request.is_pending()
+                if is_pending:
+                    return JsonResponse({
+                        'success': False,
+                        'error': "Friend request already exists"
+                    }, status = 400)
+                    
+                else:
+                    existing_friend_request.status = FriendRequest.Status.PENDING
+                    existing_friend_request.from_profile = from_profile
+                    existing_friend_request.to_profile = to_profile
+                    existing_friend_request.save()
+                    return JsonResponse({
+                        'success': True,
+                        'message': "Friend request resent"
+                    })
                 
                 
             FriendRequest.objects.create(
