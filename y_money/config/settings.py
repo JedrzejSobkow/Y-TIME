@@ -178,5 +178,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Login config
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'frineds_panel'
 LOGOUT_REDIRECT_URL = 'login'

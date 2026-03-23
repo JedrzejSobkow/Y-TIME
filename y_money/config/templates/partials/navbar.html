@@ -28,6 +28,14 @@
         <li class="nav-item">
           <a class="nav-link" href="/friends">Znajomi</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+              Wyloguj
+          </a>
+          <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+              {% csrf_token %}
+          </form>
+      </li>
       </ul>
     </div>
   </div>
