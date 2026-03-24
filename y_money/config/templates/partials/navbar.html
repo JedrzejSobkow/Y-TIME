@@ -1,6 +1,5 @@
 <!-- config/templates/partials/navbar.html -->
 {% load static %}
-{% load static %}
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid">
@@ -10,23 +9,22 @@
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="/home">Panel główny</a>
+          <a class="nav-link {% if '/home' in request.path %}active{% endif %}" href="/home">Panel główny</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/revenues-and-expenses">Wpływy i Wydatki</a>
+          <a class="nav-link {% if '/revenues-and-expenses' in request.path %}active{% endif %}" href="/revenues-and-expenses">Wpływy i Wydatki</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/my-finances">Moje finanse</a>
+          <a class="nav-link {% if '/my-finances' in request.path %}active{% endif %}" href="/my-finances">Moje finanse</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/goals">Cele</a>
+          <a class="nav-link {% if '/goals' in request.path %}active{% endif %}" href="/goals">Cele</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/friends">Znajomi</a>
+          <a class="nav-link {% if '/users/friends/' in request.path %}active{% endif %}" href="/users/friends">Znajomi</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
