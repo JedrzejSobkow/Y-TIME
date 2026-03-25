@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Panel główny - Y-money{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Witaj, {{ user.first_name }} {{ user.last_name }}!</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Podsumowanie finansów</h5>
+                </div>
+                <div class="card-body">
+                    <p>Tu będą statystyki finansowe...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Ostatnie aktywności</h5>
+                </div>
+                <div class="card-body">
+                    <p>Tu będą ostatnie transakcje...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
