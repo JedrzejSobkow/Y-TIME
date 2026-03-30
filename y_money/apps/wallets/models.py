@@ -31,7 +31,7 @@ class Wallet(TimeStampedModel):
     # TODO VERIFY IF INCOME OR OUTCOME
     @property
     def balance(self):
-        return self.transactions.aggregate(total=models.Sum('amount'))['total'] or Decimal("0.00")
+        return self.transactions.aggregate(total=models.Sum('items__amount'))['total'] or Decimal("0.00")
 
     class Meta:
         constraints = [

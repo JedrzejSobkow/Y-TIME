@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% block title %}
+  Nowa transakcja
+{% endblock %}
+
+{% block content %}
+  <style>
+    .bg-transition {
+      transition: all 0.4s ease;
+    }
+    .bg-income-light {
+      background-color: #f8fff9;
+      border-top: 5px solid #198754 !important;
+    }
+    .bg-expense-light {
+      background-color: #fff8f8;
+      border-top: 5px solid #dc3545 !important;
+    }
+    .bg-transfer-light {
+      background-color: #f8f9ff;
+      border-top: 5px solid #0d6efd !important;
+    }
+    .item-row {
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  <div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-7">
+        <div id="mainCard" class="card shadow-lg border-0 bg-transition bg-income-light" style="border-radius: 15px;">
+          <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+              <h2 id="formTitle" class="fw-bold text-dark">Zarejestruj Wpływ</h2>
+            </div>
+
+            {# Global error #}
+            <div id="globalError" class="alert alert-danger d-none"></div>
+
+            <form id="transactionForm" novalidate>
+              {% csrf_token %}
+
+              {# --- Transaction type --- #}
+              <div class="mb-4 text-center">
+                <label class="form-label fw-bold mb-3">Rodzaj operacji</label>
+                <div class="btn-group d-flex" role="group">
+                  <input type="radio" class="btn-check" name="type" id="type_income" value="income" checked />
+                  <label class="btn btn-outline-success w-100 py-2 fw-bold" for="type_income">Wpływ</label>
+
+                  <input type="radio" class="btn-check" name="type" id="type_expense" value="expense" />
+                  <label class="btn btn-outline-danger w-100 py-2 fw-bold" for="type_expense">Wydatek</label>
+
+                  <input type="radio" class="btn-check" name="type" id="type_transfer" value="transfer" />
+                  <label class="btn btn-outline-primary w-100 py-2 fw-bold" for="type_transfer">Przelew</label>
+                </div>
+              </div>
+
+              {# --- Wallet --- #}
+              <div class="mb-3">
+                <label for="id_wallet" class="form-label fw-bold">Portfel</label>
+                {{ form.wallet }}
+                <div class="invalid-feedback" id="error_wallet"></div>
+              </div>
+              {# --- Title --- #}
+              <div class="mb-3">
+                <label for="id_title" class="form-label fw-bold"><span id="labelTitle">Tytuł wpływu</span></label>
+                {{ form.title }}
+                <div class="invalid-feedback" id="error_title"></div>
+              </div>
+
+              {# --- Description --- #}
+              <div class="mb-3">
+                <label for="id_description" class="form-label fw-bold text-muted">Opis (opcjonalnie)</label>
+                {{ form.description }}
+              </div>
+
+              {# --- Data --- #}
+              <div class="mb-3">
+                <label for="id_transaction_date" class="form-label fw-bold">Data i godzina</label>
+                {{ form.transaction_date }}
+                <div id="dateWarning" class="alert alert-warning mt-2 d-none small">
+                  <i class="bi bi-clock-history me-1"></i>
+                  <strong>Transakcja planowana</strong> — stan portfela zmieni się w wybranym terminie.
+                </div>
+                <div class="invalid-feedback" id="error_transaction_date"></div>
+              </div>
+
+              {# --- Items --- #}
+              <div class="mb-3">
+                <label class="form-label fw-bold">Pozycje</label>
+                <div id="itemsContainer">
+                  <div class="item-row input-group mb-2" data-index="0">
+                    <input type="text" class="form-control" placeholder="Nazwa pozycji..." />
+                    <input type="number" class="form-control" placeholder="0.00" step="0.01" style="max-width:130px;" />
+                    <span class="input-group-text text-muted">PLN</span>
+                    <button type="button" class="btn btn-outline-danger remove-item"><i class="bi bi-trash"></i></button>
+                  </div>
+                </div>
+                <div class="invalid-feedback d-block" id="error_items"></div>
+
+                <button type="button" id="addItemBtn" class="btn btn-outline-secondary btn-sm mt-1"><i class="bi bi-plus-circle me-1"></i>Dodaj pozycję</button>
+              </div>
+
+              {# --- Sum (live) --- #}
+              <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-4">
+                <span class="text-muted fw-bold">Łączna kwota:</span>
+                <span id="totalAmount" class="fs-4 fw-bold text-success">0,00 PLN</span>
+              </div>
+
+              {# --- Submit --- #}
+              <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100 shadow-sm fw-bold py-3">Zapisz Wpływ</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const csrfToken = '{{ csrf_token }}'
+    
+    // ── Config per-type ──────────────────────────────────────────────────
+    const typeConfig = {
+      income: {
+        cardClass: 'card shadow-lg border-0 bg-transition bg-income-light',
+        title: 'Zarejestruj Wpływ',
+        label: 'Tytuł wpływu',
+        btnClass: 'btn btn-success btn-lg w-100 shadow-sm fw-bold py-3',
+        btnText: 'Zapisz Wpływ',
+        totalClass: 'fs-4 fw-bold text-success'
+      },
+      expense: {
+        cardClass: 'card shadow-lg border-0 bg-transition bg-expense-light',
+        title: 'Zarejestruj Wydatek',
+        label: 'Tytuł wydatku',
+        btnClass: 'btn btn-danger btn-lg w-100 shadow-sm fw-bold py-3',
+        btnText: 'Zapisz Wydatek',
+        totalClass: 'fs-4 fw-bold text-danger'
+      },
+      transfer: {
+        cardClass: 'card shadow-lg border-0 bg-transition bg-transfer-light',
+        title: 'Zarejestruj Przelew',
+        label: 'Tytuł przelewu',
+        btnClass: 'btn btn-primary btn-lg w-100 shadow-sm fw-bold py-3',
+        btnText: 'Zapisz Przelew',
+        totalClass: 'fs-4 fw-bold text-primary'
+      }
+    }
+    
+    // ── Change type ───────────────────────────────────────────────────────────
+    document.querySelectorAll('input[name="type"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        const cfg = typeConfig[radio.value]
+        document.getElementById('mainCard').className = cfg.cardClass
+        document.getElementById('formTitle').textContent = cfg.title
+        document.getElementById('labelTitle').textContent = cfg.label
+        document.getElementById('submitBtn').className = cfg.btnClass
+        document.getElementById('submitBtn').textContent = cfg.btnText
+        document.getElementById('totalAmount').className = cfg.totalClass
+      })
+    })
+    
+    // ── Date ─────────────────────────────────────────────────────────────────
+    ;(function setDefaultDate() {
+      const now = new Date()
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+      document.getElementById('id_transaction_date').value = now.toISOString().slice(0, 16)
+    })()
+    
+    document.getElementById('id_transaction_date').addEventListener('change', function () {
+      const warning = document.getElementById('dateWarning')
+      warning.classList.toggle('d-none', new Date(this.value) <= new Date())
+    })
+    
+    // ── Items ─────────────────────────────────────────────────────────────────
+    let itemIndex = 1
+    
+    function recalcTotal() {
+      let total = 0
+      document.querySelectorAll('#itemsContainer .item-row input[type=number]').forEach((input) => {
+        total += parseFloat(input.value) || 0
+      })
+      document.getElementById('totalAmount').textContent = total.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' PLN'
+    }
+    
+    function attachItemListeners(row) {
+      const amountInput = row.querySelector('input[type=number]');
+
+      amountInput.addEventListener('input', recalcTotal);
+
+      amountInput.addEventListener('keydown', (e) => {
+        if (e.key === '+') {
+          e.preventDefault();
+        }
+        if (e.key === '.') {
+          e.preventDefault();
+        }
+      });
+      
+      const removeBtn = row.querySelector('.remove-item')
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          if (row.dataset.index === '0') {
+            // first item - only clear
+            row.querySelector('input[type=text]').value = ''
+            row.querySelector('input[type=number]').value = ''
+            recalcTotal()
+          } else {
+            row.remove()
+            recalcTotal()
+          }
+        })
+      }
+    }
+    
+    attachItemListeners(document.querySelector('.item-row'))
+    
+    document.getElementById('addItemBtn').addEventListener('click', () => {
+      const container = document.getElementById('itemsContainer')
+      const row = document.createElement('div')
+      row.className = 'item-row input-group mb-2'
+      row.dataset.index = itemIndex++
+      row.innerHTML = `
+          <input type="text"   class="form-control"  placeholder="Nazwa pozycji..." />
+          <input type="number" class="form-control"  placeholder="0.00" step="0.01" style="max-width:130px;" />
+          <span class="input-group-text text-muted">PLN</span>
+          <button type="button" class="btn btn-outline-danger remove-item">
+            <i class="bi bi-trash"></i>
+          </button>
+        `
+      container.appendChild(row)
+      attachItemListeners(row)
+      row.querySelector('input[type=text]').focus()
+    })
+    
+    // ── Submit ────────────────────────────────────────────────────────────────
+    document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      clearErrors()
+    
+      const type = document.querySelector('input[name="type"]:checked').value
+      const btn = document.getElementById('submitBtn')
+      const cfg = typeConfig[type]
+    
+      const items = []
+      const rows = document.querySelectorAll('#itemsContainer .item-row')
+      rows.forEach((row, i) => {
+        row.dataset.submitIndex = i
+        const name = row.querySelector('input[type=text]').value.trim()
+        const amount = row.querySelector('input[type=number]').value
+        items.push({ name, amount: amount === '' ? null : parseFloat(amount) })
+      })
+    
+      btn.disabled = true
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Zapisywanie...`
+    
+      const payload = {
+        wallet: document.getElementById('id_wallet').value,
+        title: document.getElementById('id_title').value,
+        description: document.getElementById('id_description').value,
+        type,
+        transaction_date: document.getElementById('id_transaction_date').value,
+        items
+      }
+    
+      try {
+        const res = await fetch(`/transactions/add/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          body: JSON.stringify(payload)
+        })
+        const data = await res.json()
+        if (data.success) {
+          window.location.href = `/transactions/${data.transaction_id}/`
+        } else {
+          showErrors(data.errors)
+        }
+      } catch (err) {
+        document.getElementById('globalError').textContent = 'Błąd sieci. Spróbuj ponownie.'
+        document.getElementById('globalError').classList.remove('d-none')
+      } finally {
+        btn.disabled = false
+        btn.className = cfg.btnClass
+        btn.textContent = cfg.btnText
+      }
+    })
+    
+    // ── Error handling ────────────────────────────────────────────────────────
+    function clearErrors() {
+      document.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'))
+      document.querySelectorAll('.invalid-feedback').forEach((el) => (el.textContent = ''))
+      document.getElementById('globalError').classList.add('d-none')
+      document.getElementById('error_items').textContent = ''
+    }
+    
+    function showErrors(errors) {
+      for (const [field, messages] of Object.entries(errors)) {
+        const input = document.getElementById(`id_${field}`)
+        const feedback = document.getElementById(`error_${field}`)
+        if (input) input.classList.add('is-invalid')
+        if (feedback) feedback.textContent = messages.join(' ')
+      }
+    
+      // Errors for specific items
+      const itemErrors = Object.entries(errors)
+        .filter(([key]) => key.startsWith('item_'))
+        .forEach(([key, fieldErrors]) => {
+          const index = parseInt(key.split('_')[1])
+          const row = document.querySelector(`.item-row[data-submit-index="${index}"]`)
+          if (!row) return
+    
+          if (fieldErrors.name) {
+            row.querySelector('input[type=text]').classList.add('is-invalid')
+          }
+          if (fieldErrors.amount) {
+            row.querySelector('input[type=number]').classList.add('is-invalid')
+          }
+        })
+    
+      const hasItemErrors = Object.keys(errors).some((k) => k.startsWith('item_'))
+      if (hasItemErrors) {
+        document.getElementById('error_items').textContent = 'Popraw błędy w pozycjach.'
+      }
+    
+      if (errors.items) {
+        document.getElementById('error_items').textContent = errors.items.join(' ')
+      }
+    
+      if (errors.non_field) {
+        const el = document.getElementById('globalError')
+        el.textContent = errors.non_field.join(' ')
+        el.classList.remove('d-none')
+      }
+    }
+  </script>
+{% endblock %}
