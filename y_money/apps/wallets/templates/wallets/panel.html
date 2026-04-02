@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block title %}Moje finanse{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">Moje finanse</h2>
+        <button class="btn btn-primary" id="add-wallet-btn">
+          <i class="bi bi-plus-circle me-1"></i>Nowy portfel
+        </button>
+      </div>
+
+      <div id="globalError" class="alert alert-danger" style="display: none;"></div>
+
+      {% if wallets %}
+        <div class="row g-3" id="walletsList">
+          {% for wallet in wallets %}
+          <div class="col-12 col-md-6" id="wallet-{{ wallet.id }}">
+            <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h5 class="fw-bold mb-1">{{ wallet.name }}</h5>
+                    <span class="badge bg-secondary">{{ wallet.get_type_display }}</span>
+                    {% if wallet.description %}
+                      <p class="text-muted small mt-2 mb-0">{{ wallet.description }}</p>
+                    {% endif %}
+                  </div>
+                  <div class="text-end">
+                    <div class="fs-5 fw-bold {% if wallet.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                      {{ wallet.balance }} {{ wallet.currency|upper }}
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                  <a href="#" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-list-ul me-1"></i>Transakcje
+                  </a>
+                  <a href="{% url 'add-transaction' %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-plus me-1"></i>Dodaj
+                  </a>
+                  <button class="btn btn-outline-danger btn-sm ms-auto delete-wallet-btn"
+                          data-wallet-id="{{ wallet.id }}"
+                          data-wallet-name="{{ wallet.name }}">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-wallet2 fs-1 mb-3 d-block"></i>
+          <p>Nie masz jeszcze żadnych portfeli.</p>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+{# Wallet adding modal #}
+<div id="add-wallet-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Nowy portfel</h2>
+      <span class="modal-close" id="addModalClose">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div id="modalError" class="alert alert-error" style="display: none;"></div>
+      <div class="form-group mb-3">
+        <label class="form-label fw-bold">Nazwa</label>
+        {{ form.name }}
+        <div class="invalid-feedback" id="error_name"></div>
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label fw-bold text-muted">Opis (opcjonalnie)</label>
+        {{ form.description }}
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label fw-bold">Typ</label>
+        {{ form.type }}
+        <div class="invalid-feedback" id="error_type"></div>
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label fw-bold">Waluta</label>
+        {{ form.currency }}
+        <div class="invalid-feedback" id="error_currency"></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="saveWalletBtn" class="btn btn-primary">Utwórz portfel</button>
+        <button type="button" class="btn btn-secondary" id="addModalCancel">Anuluj</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Wallet deleting confirmation modal #}
+<div id="delete-wallet-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Usuń portfel</h2>
+      <span class="modal-close" id="deleteModalClose">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p>Czy na pewno chcesz usunąć portfel <strong id="deleteWalletName"></strong>?
+      Ta operacja jest nieodwracalna i usunie wszystkie powiązane transakcje.</p>
+      <div class="form-actions">
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Usuń</button>
+        <button type="button" class="btn btn-secondary" id="deleteModalCancel">Anuluj</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const csrfToken = '{{ csrf_token }}';
+  let walletToDelete = null;
+
+  // ── Opening/closing of modals ───────────────────────────────────────────
+  const addModal = document.getElementById('add-wallet-modal');
+  const deleteModal = document.getElementById('delete-wallet-modal');
+
+  function openModal(modal) { modal.style.display = 'block'; }
+  function closeModal(modal) { modal.style.display = 'none'; }
+
+  document.getElementById('addModalClose').addEventListener('click', () => closeModal(addModal));
+  document.getElementById('addModalCancel').addEventListener('click', () => closeModal(addModal));
+  document.getElementById('deleteModalClose').addEventListener('click', () => closeModal(deleteModal));
+  document.getElementById('deleteModalCancel').addEventListener('click', () => closeModal(deleteModal));
+
+  window.addEventListener('click', (e) => {
+    if (e.target === addModal) closeModal(addModal);
+    if (e.target === deleteModal) closeModal(deleteModal);
+  });
+
+  document.getElementById('add-wallet-btn').addEventListener('click', () => {
+    clearModalErrors();
+    openModal(addModal);
+  });
+
+  // ── Adding wallets ────────────────────────────────────────────────────
+  document.getElementById('saveWalletBtn').addEventListener('click', async () => {
+    clearModalErrors();
+    const btn = document.getElementById('saveWalletBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Tworzenie...';
+
+    const payload = {
+      name:        document.getElementById('id_name').value,
+      description: document.getElementById('id_description').value,
+      type:        document.getElementById('id_type').value,
+      currency:    document.getElementById('id_currency').value,
+    };
+
+    try {
+      const res = await fetch('/my-finances/add/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        showModalErrors(data.errors);
+      }
+    } catch (err) {
+      const el = document.getElementById('modalError');
+      el.textContent = 'Błąd sieci. Spróbuj ponownie.';
+      el.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Utwórz portfel';
+    }
+  });
+
+  // ── Wallet deleting ─────────────────────────────────────────────────────
+  document.querySelectorAll('.delete-wallet-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      walletToDelete = btn.dataset.walletId;
+      document.getElementById('deleteWalletName').textContent = btn.dataset.walletName;
+      openModal(deleteModal);
+    });
+  });
+
+  document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+    if (!walletToDelete) return;
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Usuwanie...';
+
+    try {
+      const res = await fetch(`/my-finances/${walletToDelete}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById(`wallet-${walletToDelete}`).remove();
+        closeModal(deleteModal);
+        walletToDelete = null;
+
+        if (document.querySelectorAll('#walletsList .col-12').length === 0) {
+            document.getElementById('walletsList').outerHTML = `
+              <div class="text-center text-muted py-5">
+                <i class="bi bi-wallet2 fs-1 mb-3 d-block"></i>
+                <p>Nie masz jeszcze żadnych portfeli.</p>
+              </div>
+            `;
+          }
+      } else {
+        const el = document.getElementById('globalError');
+        el.textContent = data.errors?.non_field?.[0] || 'Błąd usuwania.';
+        el.style.display = 'block';
+      }
+    } catch (err) {
+      const el = document.getElementById('globalError');
+      el.textContent = 'Błąd sieci. Spróbuj ponownie.';
+      el.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Usuń';
+    }
+  });
+
+  // ── Error handling ────────────────────────────────────────────────────────
+  function clearModalErrors() {
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+    const el = document.getElementById('modalError');
+    el.style.display = 'none';
+    el.textContent = '';
+  }
+
+  function showModalErrors(errors) {
+    for (const [field, messages] of Object.entries(errors)) {
+      const input = document.getElementById(`id_${field}`);
+      const feedback = document.getElementById(`error_${field}`);
+      if (input) input.classList.add('is-invalid');
+      if (feedback) feedback.textContent = messages.join(' ');
+    }
+    if (errors.non_field) {
+      const el = document.getElementById('modalError');
+      el.textContent = errors.non_field.join(' ');
+      el.style.display = 'block';
+    }
+  }
+</script>
+{% endblock %}
