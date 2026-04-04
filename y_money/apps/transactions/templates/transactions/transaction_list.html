@@ -6,17 +6,20 @@
   <div class="row justify-content-center">
     <div class="col-12 col-md-10 col-lg-8">
 
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
+      <div class="col-12 row d-flex justify-content-between align-items-center mb-4">
+        <div class="col-9">
           <a href="{% url 'wallet-panel' %}" class="text-muted small">
             <i class="bi bi-arrow-left me-1"></i>Moje finanse
           </a>
-          <h2 class="fw-bold text-dark mb-0 mt-1">{{ wallet.name }}</h2>
+          <h2 class="fw-bold text-dark mb-0 mt-1 text-truncate">{{ wallet.name }}</h2>
           <span class="text-muted small">{{ wallet.get_type_display }} · {{ wallet.currency|upper }}</span>
         </div>
-        <a href="{% url 'add-transaction-with-wallet' wallet.id %}" class="btn btn-primary">
-          <i class="bi bi-plus-circle me-1"></i>Nowa transakcja
-        </a>
+        <div class="col-3">
+          <a href="{% url 'add-transaction-with-wallet' wallet.id %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i>
+            <span class="d-none d-md-inline ms-1">Nowa transakcja</span>
+          </a>
+        </div>
       </div>
 
       <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">

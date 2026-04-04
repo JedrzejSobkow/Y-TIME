@@ -45,7 +45,7 @@
                   <a href="{% url 'transaction-list' wallet.id %}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-list-ul me-1"></i>Transakcje
                   </a>
-                  <a href="{% url 'add-transaction' %}" class="btn btn-outline-success btn-sm">
+                  <a href="{% url 'add-transaction-with-wallet' wallet.id %}" class="btn btn-outline-success btn-sm">
                     <i class="bi bi-plus me-1"></i>Dodaj
                   </a>
                   <button class="btn btn-outline-danger btn-sm ms-auto delete-wallet-btn"
