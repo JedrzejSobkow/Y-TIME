@@ -27,6 +27,8 @@
                     <span class="badge bg-secondary">{{ wallet.get_type_display }}</span>
                     {% if wallet.description %}
                       <p class="text-muted small mt-2 mb-0">{{ wallet.description }}</p>
+                    {% else %}
+                      <p class="text-muted small mt-2 mb-0">Brak opisu</p>
                     {% endif %}
                   </div>
                   <div class="text-end">
