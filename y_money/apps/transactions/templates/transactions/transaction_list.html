@@ -41,11 +41,18 @@
       </div>
 
       {# Filtry #}
+      <style>
+        .equal-height-input {
+            height: 31px;
+            line-height: 1.5;
+        }
+      </style>
+      
       <form method="GET" class="card shadow-sm border-0 mb-4 p-3" style="border-radius: 12px;">
         <div class="row g-2 align-items-end">
           <div class="col-12 col-md-4">
             <label class="form-label small fw-bold mb-1">Typ</label>
-            <select name="type" class="form-select form-select-sm">
+            <select name="type" class="form-select form-select-sm equal-height-input">
               <option value="">Wszystkie</option>
               <option value="income"  {% if type_filter == "income"  %}selected{% endif %}>Wpływ</option>
               <option value="expense" {% if type_filter == "expense" %}selected{% endif %}>Wydatek</option>
@@ -54,14 +61,14 @@
           </div>
           <div class="col-12 col-md-3">
             <label class="form-label small fw-bold mb-1">Od</label>
-            <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+            <input type="date" name="date_from" class="form-control form-control-sm equal-height-input" value="{{ date_from }}">
           </div>
           <div class="col-12 col-md-3">
             <label class="form-label small fw-bold mb-1">Do</label>
-            <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+            <input type="date" name="date_to" class="form-control form-control-sm equal-height-input" value="{{ date_to }}">
           </div>
           <div class="col-12 col-md-2 d-flex gap-1">
-            <button type="submit" class="btn btn-primary btn-sm w-100">Filtruj</button>
+            <button type="submit" class="btn btn-primary btn-sm w-100 equal-height-input d-flex align-items-center justify-content-center">Filtruj</button>
           </div>
         </div>
       </form>
