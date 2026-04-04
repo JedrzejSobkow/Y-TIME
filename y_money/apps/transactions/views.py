@@ -3,9 +3,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.http.response import JsonResponse
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from .forms import TransactionForm, TransactionItemForm
-from .models import TransactionItem
+from .models import TransactionItem, Transaction
 from apps.users.models import Profile
+from apps.wallets.models import Wallet
+
 import json
 
 class TransactionCreateView(LoginRequiredMixin, View):
@@ -84,3 +87,30 @@ class TransactionCreateView(LoginRequiredMixin, View):
                 "success": False,
                 "errors": {"non_field": [str(e)]}
             }, status=400)
+            
+
+class TransactionListView(LoginRequiredMixin, View):
+    def get(self, request, wallet_id):
+        profile = Profile.objects.get(user=request.user)
+        wallet = get_object_or_404(Wallet, id=wallet_id, owner=profile)
+
+        transactions = wallet.transactions.prefetch_related("items")
+
+        type_filter = request.GET.get("type")
+        if type_filter in Transaction.TransactionType.values:
+            transactions = transactions.filter(type=type_filter)
+
+        date_from = request.GET.get("date_from")
+        date_to = request.GET.get("date_to")
+        if date_from:
+            transactions = transactions.filter(transaction_date__date__gte=date_from)
+        if date_to:
+            transactions = transactions.filter(transaction_date__date__lte=date_to)
+
+        return render(request, "transactions/transaction_list.html", {
+            "wallet": wallet,
+            "transactions": transactions,
+            "type_filter": type_filter or "",
+            "date_from": date_from or "",
+            "date_to": date_to or "",
+        })
