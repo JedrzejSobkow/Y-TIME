@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.http.response import JsonResponse
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.db.models import Count, Q
 from .forms import TransactionForm, TransactionItemForm
 from .models import TransactionItem, Transaction
 from apps.users.models import Profile
@@ -36,7 +37,6 @@ class TransactionCreateView(LoginRequiredMixin, View):
                     "errors": {"items": ["Dodaj co najmniej jedną pozycję."]}
                 }, status=400)
                 
-            item_forms = [TransactionItemForm(item) for item in items_data]
             item_forms = [TransactionItemForm(data=item) for item in items_data]
             item_errors = {}
             for i, item_form in enumerate(item_forms):
@@ -113,4 +113,9 @@ class TransactionListView(LoginRequiredMixin, View):
             "type_filter": type_filter or "",
             "date_from": date_from or "",
             "date_to": date_to or "",
+            "counts": transactions.aggregate(
+                income=Count("id", filter=Q(type="income")),
+                expense=Count("id", filter=Q(type="expense")),
+                transfer=Count("id", filter=Q(type="transfer")),
+            ),
         })
