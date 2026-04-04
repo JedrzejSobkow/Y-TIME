@@ -22,7 +22,18 @@ class TransactionCreateView(LoginRequiredMixin, View):
             initial_data['wallet'] = wallet
             
         form = TransactionForm(profile=profile, initial=initial_data)
-        return render(request, "transactions/transaction_create.html", {"form": form})
+        
+        wallets = Wallet.objects.filter(owner=profile).only("id", "currency")
+        wallet_currencies = {str(w.id): w.currency.upper() for w in wallets}
+
+        return render(
+            request, 
+            "transactions/transaction_create.html", 
+            {
+                "form": form,
+                "wallet_currencies": wallet_currencies,
+            },
+        )
     
     def post(self, request):
         try:

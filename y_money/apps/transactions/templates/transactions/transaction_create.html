@@ -102,7 +102,7 @@
                   <div class="item-row input-group mb-2" data-index="0">
                     <input type="text" class="form-control" placeholder="Nazwa pozycji..." />
                     <input type="number" class="form-control" placeholder="0.00" step="0.01" style="max-width:130px;" />
-                    <span class="input-group-text text-muted">PLN</span>
+                    <span class="input-group-text text-muted item-currency">PLN</span>
                     <button type="button" class="btn btn-outline-danger remove-item"><i class="bi bi-trash"></i></button>
                   </div>
                 </div>
@@ -129,6 +129,7 @@
 
   <script>
     const csrfToken = '{{ csrf_token }}'
+    const walletCurrencies = {{ wallet_currencies|safe }}
     // ── Config per-type ──────────────────────────────────────────────────
     const typeConfig = {
       income: {
@@ -156,6 +157,33 @@
         totalClass: 'fs-4 fw-bold text-primary'
       }
     }
+
+    // ── Currency handling ─────────────────────────────────────────────────
+    let currentCurrency = 'PLN'
+
+    function updateCurrency() {
+      const walletSelect = document.getElementById('id_wallet')
+      const walletId = walletSelect.value
+      currentCurrency = walletCurrencies[walletId] || 'PLN'
+
+      // update item rows
+      document.querySelectorAll('#itemsContainer .item-currency').forEach((el) => {
+        el.textContent = currentCurrency
+      })
+
+      // update total label text (keep number, only change currency)
+      const totalEl = document.getElementById('totalAmount')
+      const parts = totalEl.textContent.split(' ')
+      if (parts.length > 0) {
+        parts[parts.length - 1] = currentCurrency
+        totalEl.textContent = parts.join(' ')
+      }
+    }
+
+    document.getElementById('id_wallet').addEventListener('change', () => {
+      updateCurrency()
+      recalcTotal()
+    })
     
     // ── Change type ───────────────────────────────────────────────────────────
     document.querySelectorAll('input[name="type"]').forEach((radio) => {
@@ -170,6 +198,8 @@
         recalcTotal()
       })
     })
+
+    updateCurrency()
     
     // ── Date ─────────────────────────────────────────────────────────────────
     ;(function setDefaultDate() {
@@ -205,7 +235,7 @@
         formattedTotal = '+' + formattedTotal
       }
 
-      document.getElementById('totalAmount').textContent = formattedTotal + ' PLN'
+      document.getElementById('totalAmount').textContent = formattedTotal + ' ' + currentCurrency
     }
     
     function attachItemListeners(row) {
@@ -248,13 +278,16 @@
       row.innerHTML = `
           <input type="text"   class="form-control"  placeholder="Nazwa pozycji..." />
           <input type="number" class="form-control"  placeholder="0,00" step="0.01" style="max-width:130px;" />
-          <span class="input-group-text text-muted">PLN</span>
+          <span class="input-group-text text-muted item-currency"></span>
           <button type="button" class="btn btn-outline-danger remove-item">
             <i class="bi bi-trash"></i>
           </button>
         `
       container.appendChild(row)
       attachItemListeners(row)
+
+      row.querySelector('.item-currency').textContent = currentCurrency
+
       row.querySelector('input[type=text]').focus()
     })
     
