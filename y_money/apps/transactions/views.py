@@ -13,9 +13,15 @@ from apps.wallets.models import Wallet
 import json
 
 class TransactionCreateView(LoginRequiredMixin, View):
-    def get(self, request):
+    def get(self, request, wallet_id=None):
         profile = Profile.objects.get(user=request.user)
-        form = TransactionForm(profile=profile)
+        
+        initial_data = {}
+        if wallet_id:
+            wallet = get_object_or_404(Wallet, pk=wallet_id, owner=profile)
+            initial_data['wallet'] = wallet
+            
+        form = TransactionForm(profile=profile, initial=initial_data)
         return render(request, "transactions/transaction_create.html", {"form": form})
     
     def post(self, request):
