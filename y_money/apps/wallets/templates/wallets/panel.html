@@ -18,21 +18,25 @@
       {% if wallets %}
         <div class="row g-3" id="walletsList">
           {% for wallet in wallets %}
-          <div class="col-12 col-md-6" id="wallet-{{ wallet.id }}">
+          <div class="col-12 col-sm-12 col-md-12 col-lg-12" id="wallet-{{ wallet.id }}">
             <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
               <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <h5 class="fw-bold mb-1">{{ wallet.name }}</h5>
+                <div class="d-flex justify-content-between align-items-start row">
+                  <div class="col-6">
+                    <h5 class="fw-bold mb-1 text-truncate" title="{{ wallet.name }}">
+                      {{ wallet.name}}
+                    </h5>
                     <span class="badge bg-secondary">{{ wallet.get_type_display }}</span>
                     {% if wallet.description %}
-                      <p class="text-muted small mt-2 mb-0">{{ wallet.description }}</p>
+                      <p class="text-muted small mt-2 mb-0" title="{{ wallet.description }}">
+                        {{ wallet.description }}
+                      </p>
                     {% else %}
                       <p class="text-muted small mt-2 mb-0">Brak opisu</p>
                     {% endif %}
                   </div>
-                  <div class="text-end">
-                    <div class="fs-5 fw-bold {% if wallet.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                  <div class="text-end col-6">
+                    <div class="fs-5 fs-md-5 fs-sm-2 fw-bold {% if wallet.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
                       {{ wallet.balance }} {{ wallet.currency|upper }}
                     </div>
                   </div>
