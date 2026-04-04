@@ -136,3 +136,18 @@ class TransactionListView(LoginRequiredMixin, View):
                 transfer=Count("id", filter=Q(type="transfer")),
             ),
         })
+        
+class TransactionDetailView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        profile = Profile.objects.get(user=request.user)
+        transaction_obj = get_object_or_404(
+            Transaction.objects.select_related("wallet").prefetch_related("items"),
+            pk=pk,
+            wallet__owner=profile,
+        )
+
+        return render(
+            request,
+            "transactions/transaction_detail.html",
+            {"transaction": transaction_obj},
+        )
