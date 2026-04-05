@@ -95,8 +95,35 @@
                 <div class="invalid-feedback" id="error_transaction_date"></div>
               </div>
 
-              {# --- Items --- #}
+              {# --- Mode: simple vs detailed --- #}
               <div class="mb-3">
+                <label class="form-label fw-bold">Typ transakcji</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="entry_mode" id="mode_detailed" value="detailed">
+                  <label class="form-check-label" for="mode_detailed">
+                    Szczegółowa
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="entry_mode" id="mode_simple" value="simple" checked>
+                  <label class="form-check-label" for="mode_simple">
+                    Ogólna
+                  </label>
+                </div>
+              </div>
+
+              {# --- Simple amount --- #}
+              <div class="mb-3" id="simpleAmountWrapper">
+                <label for="id_simple_amount" class="form-label fw-bold">Łączna kwota</label>
+                <div class="input-group" style="max-width: 260px;">
+                  <input type="number" class="form-control" id="id_simple_amount" step="0.01" placeholder="0,00">
+                  <span class="input-group-text text-muted" id="simpleAmountCurrency">PLN</span>
+                </div>
+                <div class="invalid-feedback d-block" id="error_simple_amount"></div>
+              </div>
+              
+              {# --- Items --- #}
+              <div class="mb-3 d-none" id="itemsWrapper">
                 <label class="form-label fw-bold">Pozycje</label>
                 <div id="itemsContainer">
                   <div class="item-row input-group mb-2" data-index="0">
@@ -171,6 +198,9 @@
         el.textContent = currentCurrency
       })
 
+      // update simple amount currency
+      document.getElementById('simpleAmountCurrency').textContent = currentCurrency
+
       // update total label text (keep number, only change currency)
       const totalEl = document.getElementById('totalAmount')
       const parts = totalEl.textContent.split(' ')
@@ -183,6 +213,22 @@
     document.getElementById('id_wallet').addEventListener('change', () => {
       updateCurrency()
       recalcTotal()
+    })
+
+    // ── Entry mode ───────────────────────────────────────────────────────────
+    function getEntryMode() {
+      return document.querySelector('input[name="entry_mode"]:checked')?.value || 'simple'
+    }
+
+    function updateEntryModeUI() {
+      const simpleMode = getEntryMode() === 'simple'
+      document.getElementById('simpleAmountWrapper').classList.toggle('d-none', !simpleMode)
+      document.getElementById('itemsWrapper').classList.toggle('d-none', simpleMode)
+      recalcTotal()
+    }
+
+    document.querySelectorAll('input[name="entry_mode"]').forEach((radio) => {
+      radio.addEventListener('change', updateEntryModeUI)
     })
     
     // ── Change type ───────────────────────────────────────────────────────────
@@ -200,6 +246,7 @@
     })
 
     updateCurrency()
+    updateEntryModeUI()
     
     // ── Date ─────────────────────────────────────────────────────────────────
     ;(function setDefaultDate() {
@@ -218,9 +265,16 @@
     
     function recalcTotal() {
       let total = 0
-      document.querySelectorAll('#itemsContainer .item-row input[type=number]').forEach((input) => {
-        total += parseFloat(input.value) || 0
-      })
+      const mode = getEntryMode()
+
+      if (mode === 'simple') {
+        total = parseFloat(document.getElementById('id_simple_amount').value) || 0
+      } else {
+        document.querySelectorAll('#itemsContainer .item-row input[type=number]').forEach((input) => {
+          total += parseFloat(input.value) || 0
+        })
+      }
+
       const type = document.querySelector('input[name="type"]:checked').value
       if (type === 'expense') {
         total = -total
@@ -269,6 +323,17 @@
     }
     
     attachItemListeners(document.querySelector('.item-row'))
+
+    document.getElementById('id_simple_amount').addEventListener('input', recalcTotal)
+
+    document.getElementById('id_simple_amount').addEventListener('keydown', (e) => {
+      if (e.key === '+') {
+        e.preventDefault();
+      }
+      if (e.key === '.') {
+        e.preventDefault();
+      }
+    })
     
     document.getElementById('addItemBtn').addEventListener('click', () => {
       const container = document.getElementById('itemsContainer')
@@ -299,13 +364,13 @@
       const type = document.querySelector('input[name="type"]:checked').value
       const btn = document.getElementById('submitBtn')
       const cfg = typeConfig[type]
+      const mode = getEntryMode()
     
       const items = []
-      const rows = document.querySelectorAll('#itemsContainer .item-row')
-      rows.forEach((row, i) => {
-        row.dataset.submitIndex = i
-        const name = row.querySelector('input[type=text]').value.trim()
-        const amount = row.querySelector('input[type=number]').value
+
+      if (mode === 'simple') {
+        const title = document.getElementById('id_title').value.trim()
+        const amount = document.getElementById('id_simple_amount').value
 
         let numericAmount = amount === '' ? null : parseFloat(amount)
 
@@ -313,8 +378,23 @@
           numericAmount = -numericAmount
         }
 
-        items.push({ name, amount: numericAmount })
-      })
+        items.push({ name: title, amount: numericAmount })
+      } else {
+        const rows = document.querySelectorAll('#itemsContainer .item-row')
+        rows.forEach((row, i) => {
+          row.dataset.submitIndex = i
+          const name = row.querySelector('input[type=text]').value.trim()
+          const amount = row.querySelector('input[type=number]').value
+
+          let numericAmount = amount === '' ? null : parseFloat(amount)
+
+          if (type === 'expense' && numericAmount !== null) {
+            numericAmount = -numericAmount
+          }
+
+          items.push({ name, amount: numericAmount })
+        })
+      }
     
       btn.disabled = true
       btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Zapisywanie...`
@@ -356,6 +436,7 @@
       document.querySelectorAll('.invalid-feedback').forEach((el) => (el.textContent = ''))
       document.getElementById('globalError').classList.add('d-none')
       document.getElementById('error_items').textContent = ''
+      document.getElementById('error_simple_amount').textContent = ''
     }
     
     function showErrors(errors) {
@@ -385,10 +466,23 @@
       const hasItemErrors = Object.keys(errors).some((k) => k.startsWith('item_'))
       if (hasItemErrors) {
         document.getElementById('error_items').textContent = 'Popraw błędy w pozycjach.'
+
+        // In simple mode backend may still return item_0 errors (synthetic item),
+        // so mirror the message under simple amount as well.
+        if (getEntryMode() === 'simple') {
+          document.getElementById('id_simple_amount').classList.add('is-invalid')
+          document.getElementById('error_simple_amount').textContent = 'Popraw błędy w pozycjach.'
+        }
       }
     
       if (errors.items) {
         document.getElementById('error_items').textContent = errors.items.join(' ')
+
+        const joinedItemsError = errors.items.join(' ')
+        if (joinedItemsError.includes('Łączna kwota')) {
+          document.getElementById('id_simple_amount').classList.add('is-invalid')
+          document.getElementById('error_simple_amount').textContent = joinedItemsError
+        }
       }
     
       if (errors.non_field) {
