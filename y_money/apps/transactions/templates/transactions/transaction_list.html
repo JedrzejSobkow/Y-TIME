@@ -49,6 +49,17 @@
             height: 31px;
             line-height: 1.5;
         }
+
+        .clickable-card {
+          cursor: pointer;
+          transition: box-shadow 0.15s ease, transform 0.15s ease, background-color 0.15s ease;
+      }
+
+      .clickable-card:hover {
+          box-shadow: 0 0.5rem 1rem rgba(0,0,0,.08);
+          background-color: #f8f9fa;
+          transform: translateY(-1px);
+      }
       </style>
       
       <form method="GET" class="card shadow-sm border-0 mb-4 p-3" style="border-radius: 12px;">
@@ -80,35 +91,37 @@
       {% if transactions %}
         <div class="d-flex flex-column gap-2">
           {% for t in transactions %}
-          <div class="card shadow-sm border-0" style="border-radius: 10px;">
-            <div class="card-body p-3">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    {% if t.type == "income" %}
-                      <span class="badge bg-success">Wpływ</span>
-                    {% elif t.type == "expense" %}
-                      <span class="badge bg-danger">Wydatek</span>
-                    {% else %}
-                      <span class="badge bg-primary">Przelew</span>
+          <a href="{% url 'transaction-detail' t.id %}" class="text-decoration-none text-reset">
+            <div class="card shadow-sm border-0 clickable-card" style="border-radius: 10px;">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      {% if t.type == "income" %}
+                        <span class="badge bg-success">Wpływ</span>
+                      {% elif t.type == "expense" %}
+                        <span class="badge bg-danger">Wydatek</span>
+                      {% else %}
+                        <span class="badge bg-primary">Przelew</span>
+                      {% endif %}
+                      <span class="fw-bold">{{ t.title }}</span>
+                    </div>
+                    <div class="text-muted small">
+                      {{ t.transaction_date|date:"d.m.Y H:i" }}
+                    </div>
+                    {% if t.description %}
+                      <div class="text-muted small mt-1">{{ t.description }}</div>
                     {% endif %}
-                    <span class="fw-bold">{{ t.title }}</span>
                   </div>
-                  <div class="text-muted small">
-                    {{ t.transaction_date|date:"d.m.Y H:i" }}
-                  </div>
-                  {% if t.description %}
-                    <div class="text-muted small mt-1">{{ t.description }}</div>
-                  {% endif %}
-                </div>
-                <div class="text-end ms-3">
-                  <div class="fs-5 fw-bold {% if t.amount >= 0 %}text-success{% else %}text-danger{% endif %}">
-                    {% if t.amount >= 0 %}+{% endif %}{{ t.amount }} {{ wallet.currency|upper }}
+                  <div class="text-end ms-3">
+                    <div class="fs-5 fw-bold {% if t.amount >= 0 %}text-success{% else %}text-danger{% endif %}">
+                      {% if t.amount >= 0 %}+{% endif %}{{ t.amount }} {{ wallet.currency|upper }}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </a>
           {% endfor %}
         </div>
         
