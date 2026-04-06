@@ -23,6 +23,7 @@ class Wallet(TimeStampedModel):
         
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="wallets")
     name = models.CharField(max_length=100)
+    is_default = models.BooleanField(default=False)
     description = models.TextField(blank=True)
     type = models.CharField(max_length=12, choices=WalletType.choices, default=WalletType.CASH)
     currency = models.CharField(max_length=3, choices=Currency.choices, default=Currency.PLN)
@@ -35,7 +36,8 @@ class Wallet(TimeStampedModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["owner", "name"], name="unique_wallet")
+            models.UniqueConstraint(fields=["owner", "name"], name="unique_wallet"),
+            models.UniqueConstraint(fields=["owner"], condition=models.Q(is_default=True), name="unique_default_wallet_per_owner",),
         ]
         
         indexes = [
