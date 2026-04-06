@@ -5,7 +5,7 @@ from .models import Wallet
 class WalletForm(forms.ModelForm):
     class Meta:
         model = Wallet
-        fields = ["name", "description", "type", "currency"]
+        fields = ["name", "description", "type", "currency", "is_default"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-control",
@@ -21,6 +21,9 @@ class WalletForm(forms.ModelForm):
             }),
             "currency": forms.Select(attrs={
                 "class": "form-select",
+            }),
+            "is_default": forms.CheckboxInput(attrs={
+                "class": "form-check-input",
             }),
         }
 

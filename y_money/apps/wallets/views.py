@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from apps.users.models import Profile
 from .models import Wallet
 from .forms import WalletForm
+from django.db import transaction
 
 
 class WalletPanelView(LoginRequiredMixin, TemplateView):
@@ -15,7 +16,9 @@ class WalletPanelView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         profile = Profile.objects.get(user=self.request.user)
-        context["wallets"] = Wallet.objects.filter(owner=profile)
+        wallets = Wallet.objects.filter(owner=profile)
+        context["wallets"] = wallets
+        context["default_wallet"] = wallets.filter(is_default=True).first()
         context["form"] = WalletForm()
         return context
 
@@ -35,7 +38,11 @@ class WalletCreateView(LoginRequiredMixin, View):
 
             wallet = form.save(commit=False)
             wallet.owner = profile
-            wallet.save()
+
+            with transaction.atomic():
+                if wallet.is_default:
+                    Wallet.objects.filter(owner=profile, is_default=True).update(is_default=False)
+                wallet.save()
 
             return JsonResponse({
                 "success": True,

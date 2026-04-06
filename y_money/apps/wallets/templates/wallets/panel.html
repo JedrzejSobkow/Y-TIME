@@ -15,6 +15,24 @@
     transform: translateY(-2px);
     background-color: #f8f9fa;
   }
+
+  .wallet-card-default {
+    border: 2px solid #f0ad4e;
+    background: linear-gradient(180deg, #fffaf0 0%, #ffffff 100%);
+  }
+
+  .default-badge {
+    background-color: #f0ad4e;
+    color: #212529;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    padding: 0;
+    border-radius: 999px;
+  }
 </style>
 
 <div class="container mt-5 mb-5">
@@ -33,13 +51,23 @@
       {% if wallets %}
         <div class="row g-3" id="walletsList">
           {% for wallet in wallets %}
-          <div class="col-12 col-sm-12 col-md-12 col-lg-12" id="wallet-{{ wallet.id }}">
-            <div class="card wallet-card h-100" style="border-radius: 12px;">
+          <div class="col-12 col-sm-12 col-md-12 col-lg-12" id="wallet-{{ wallet.id }}" data-wallet-name="{{ wallet.name }}">
+            <div class="card wallet-card h-100 {% if wallet.is_default %}wallet-card-default{% endif %}" style="border-radius: 12px;">
               <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start row">
                   <div class="col-6">
                     <h5 class="fw-bold mb-1 text-truncate" title="{{ wallet.name }}">
-                      {{ wallet.name}}
+                      {{ wallet.name }}
+                      {% if wallet.is_default %}
+                        <span class="badge default-badge ms-2">
+                            <i
+                              class="bi bi-star-fill"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="To jest Twój domyślny portfel. Znajomi wysyłają pieniądze właśnie na ten portfel."
+                            ></i>
+                        </span>
+                      {% endif %}
                     </h5>
                     <span class="badge bg-secondary">{{ wallet.get_type_display }}</span>
                     {% if wallet.description %}
@@ -113,6 +141,29 @@
         {{ form.currency }}
         <div class="invalid-feedback" id="error_currency"></div>
       </div>
+      <div class="form-group mb-3">
+        <div class="form-check d-flex align-items-center gap-2">
+          {{ form.is_default }}
+          <label class="form-check-label fw-bold mb-0" for="id_is_default">
+            Ustaw jako domyślny portfel
+          </label>
+          <i
+            class="bi bi-info-circle text-muted"
+            data-bs-toggle="tooltip"
+            data-bs-placement="right"
+            title="Gdy znajomi będą wysyłać Ci pieniądze, ten portfel będzie domyślnym kontem odbioru."
+          ></i>
+        </div>
+        <div class="form-text mt-1" id="defaultWalletInfo">
+          {% if default_wallet %}
+            Domyślny portfel już istnieje: <strong>{{ default_wallet.name }}</strong>. Jeśli zaznaczysz tę opcję,
+            nowy portfel stanie się domyślny, a tamten utraci ten status.
+          {% else %}
+            Nie masz jeszcze domyślnego portfela. Zaznaczenie tej opcji ustawi nowy portfel jako domyślny.
+          {% endif %}
+        </div>
+        <div class="invalid-feedback d-block" id="error_is_default"></div>
+      </div>
       <div class="form-actions">
         <button type="button" id="saveWalletBtn" class="btn btn-primary">Utwórz portfel</button>
         <button type="button" class="btn btn-secondary" id="addModalCancel">Anuluj</button>
@@ -147,6 +198,21 @@
   const addModal = document.getElementById('add-wallet-modal');
   const deleteModal = document.getElementById('delete-wallet-modal');
 
+  function refreshDefaultWalletInfo() {
+    const infoEl = document.getElementById('defaultWalletInfo');
+    if (!infoEl) return;
+
+    const defaultCard = document.querySelector('#walletsList .wallet-card-default');
+    if (!defaultCard) {
+      infoEl.textContent = 'Nie masz jeszcze domyślnego portfela. Zaznaczenie tej opcji ustawi nowy portfel jako domyślny.';
+      return;
+    }
+
+    const walletRow = defaultCard.closest('[data-wallet-name]');
+    const walletName = walletRow?.dataset.walletName || 'portfel';
+    infoEl.innerHTML = `Domyślny portfel już istnieje: <strong>${walletName}</strong>. Jeśli zaznaczysz tę opcję, nowy portfel stanie się domyślny, a tamten utraci ten status.`;
+  }
+
   function openModal(modal) { modal.style.display = 'block'; }
   function closeModal(modal) { modal.style.display = 'none'; }
 
@@ -162,6 +228,7 @@
 
   document.getElementById('add-wallet-btn').addEventListener('click', () => {
     clearModalErrors();
+    refreshDefaultWalletInfo();
     openModal(addModal);
   });
 
@@ -177,6 +244,7 @@
       description: document.getElementById('id_description').value,
       type:        document.getElementById('id_type').value,
       currency:    document.getElementById('id_currency').value,
+      is_default:  document.getElementById('id_is_default').checked,
     };
 
     try {
@@ -226,6 +294,7 @@
         document.getElementById(`wallet-${walletToDelete}`).remove();
         closeModal(deleteModal);
         walletToDelete = null;
+        refreshDefaultWalletInfo();
 
         if (document.querySelectorAll('#walletsList .col-12').length === 0) {
             document.getElementById('walletsList').outerHTML = `
@@ -272,5 +341,9 @@
       el.style.display = 'block';
     }
   }
+
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+    new bootstrap.Tooltip(el)
+  })
 </script>
 {% endblock %}
