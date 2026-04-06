@@ -1,6 +1,7 @@
 from django.db import models
 from apps.core.models import TimeStampedModel
 from apps.wallets.models import Wallet
+from apps.users.models import Profile
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 
@@ -11,6 +12,10 @@ class Transaction(TimeStampedModel):
         EXPENSE = "expense", "Expense"
         INCOME = "income", "Income"
         TRANSFER = "transfer", "Transfer"
+
+    class TransferMode(models.TextChoices):
+        INTERNAL = "internal", "Internal"
+        EXTERNAL = "external", "External"
         
         
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
@@ -18,6 +23,21 @@ class Transaction(TimeStampedModel):
     description = models.TextField(blank=True)
     type = models.CharField(max_length=10, choices=TransactionType.choices)
     transaction_date = models.DateTimeField()
+    transfer_mode = models.CharField(max_length=10, choices=TransferMode.choices, blank=True, null=True)
+    recipient_wallet = models.ForeignKey(
+        Wallet,
+        on_delete=models.SET_NULL,
+        related_name="incoming_transfers",
+        blank=True,
+        null=True,
+    )
+    recipient_friend = models.ForeignKey(
+        Profile,
+        on_delete=models.SET_NULL,
+        related_name="incoming_external_transfers",
+        blank=True,
+        null=True,
+    )
     # TODO add counterparty
     
     @property
@@ -34,6 +54,24 @@ class Transaction(TimeStampedModel):
     def clean(self):
         if self.pk and not self.items.exists():
             raise ValidationError("Transaction must have at least one item")
+
+        if self.type != self.TransactionType.TRANSFER:
+            if self.transfer_mode or self.recipient_wallet_id or self.recipient_friend_id:
+                raise ValidationError("Transfer details are allowed only for transfer transactions")
+
+        if self.type == self.TransactionType.TRANSFER:
+            if self.transfer_mode not in self.TransferMode.values:
+                raise ValidationError("Transfer mode is required for transfer transactions")
+
+            if self.transfer_mode == self.TransferMode.INTERNAL:
+                if not self.recipient_wallet_id:
+                    raise ValidationError("Internal transfer requires recipient wallet")
+                if self.recipient_friend_id:
+                    raise ValidationError("Internal transfer cannot have friend recipient")
+
+            if self.transfer_mode == self.TransferMode.EXTERNAL:
+                if not self.recipient_friend_id:
+                    raise ValidationError("External transfer requires friend recipient")
    
     
 class TransactionItem(TimeStampedModel):
