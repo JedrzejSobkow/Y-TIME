@@ -272,7 +272,13 @@ class TransactionDetailView(LoginRequiredMixin, View):
     def get(self, request, pk):
         profile = Profile.objects.get(user=request.user)
         transaction_obj = get_object_or_404(
-            Transaction.objects.select_related("wallet").prefetch_related("items"),
+            Transaction.objects.select_related(
+                "wallet",
+                "wallet__owner__user",
+                "recipient_wallet",
+                "recipient_wallet__owner__user",
+                "recipient_friend__user",
+            ).prefetch_related("items"),
             pk=pk,
             wallet__owner=profile,
         )
