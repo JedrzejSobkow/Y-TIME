@@ -95,6 +95,46 @@
                 <div class="invalid-feedback" id="error_transaction_date"></div>
               </div>
 
+              {# --- Transfer details --- #}
+              <div id="transferOptionsWrapper" class="mb-3 d-none">
+                <label class="form-label fw-bold">Szczegoly przelewu</label>
+
+                <div class="mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="transfer_mode" id="transfer_mode_internal" value="internal" checked>
+                    <label class="form-check-label" for="transfer_mode_internal">Przelew wewnetrzny</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="transfer_mode" id="transfer_mode_external" value="external">
+                    <label class="form-check-label" for="transfer_mode_external">Przelew zewnetrzny</label>
+                  </div>
+                  <div class="invalid-feedback d-block" id="error_transfer_mode"></div>
+                </div>
+
+                <div id="internalTransferWrapper" class="mb-2">
+                  <label for="id_recipient_wallet" class="form-label fw-bold">Portfel odbiorcy (Twoj)</label>
+                  <select id="id_recipient_wallet" class="form-select">
+                    <option value="">Wybierz portfel</option>
+                    {% for w in transfer_wallet_options %}
+                      <option value="{{ w.id }}">{{ w.name }} ({{ w.currency }})</option>
+                    {% endfor %}
+                  </select>
+                  <div class="invalid-feedback" id="error_recipient_wallet"></div>
+                </div>
+
+                <div id="externalTransferWrapper" class="mb-2 d-none">
+                  <label for="id_recipient_friend" class="form-label fw-bold">Znajomy odbiorca</label>
+                  <select id="id_recipient_friend" class="form-select">
+                    <option value="">Wybierz znajomego</option>
+                    {% for f in friend_transfer_options %}
+                      <option value="{{ f.id }}">{{ f.label }}</option>
+                    {% endfor %}
+                  </select>
+                  <div class="form-text">Znajomy bez domyslnego portfela nie moze byc odbiorca przelewu.</div>
+                  <div class="invalid-feedback" id="error_recipient_friend"></div>
+                </div>
+              </div>
+
               {# --- Mode: simple vs detailed --- #}
               <div class="mb-3">
                 <label class="form-label fw-bold">Typ transakcji</label>
@@ -156,7 +196,8 @@
 
   <script>
     const csrfToken = '{{ csrf_token }}'
-    const walletCurrencies = {{ wallet_currencies|safe }}
+    const walletCurrencies = JSON.parse('{{ wallet_currencies_json|escapejs }}')
+    const friendDefaultWalletMap = JSON.parse('{{ friend_default_wallet_map_json|escapejs }}')
     // ── Config per-type ──────────────────────────────────────────────────
     const typeConfig = {
       income: {
@@ -212,7 +253,56 @@
 
     document.getElementById('id_wallet').addEventListener('change', () => {
       updateCurrency()
+      updateTransferUI()
       recalcTotal()
+    })
+
+    function getTransferMode() {
+      return document.querySelector('input[name="transfer_mode"]:checked')?.value || 'internal'
+    }
+
+    function updateTransferUI() {
+      const type = document.querySelector('input[name="type"]:checked').value
+      const transferWrapper = document.getElementById('transferOptionsWrapper')
+      const internalWrapper = document.getElementById('internalTransferWrapper')
+      const externalWrapper = document.getElementById('externalTransferWrapper')
+
+      const isTransfer = type === 'transfer'
+      transferWrapper.classList.toggle('d-none', !isTransfer)
+      if (!isTransfer) {
+        return
+      }
+
+      const mode = getTransferMode()
+      internalWrapper.classList.toggle('d-none', mode !== 'internal')
+      externalWrapper.classList.toggle('d-none', mode !== 'external')
+
+      // Source wallet cannot be recipient for internal transfer.
+      const sourceWalletId = document.getElementById('id_wallet').value
+      const recipientWalletSelect = document.getElementById('id_recipient_wallet')
+      Array.from(recipientWalletSelect.options).forEach((option) => {
+        if (!option.value) return
+        option.disabled = option.value === sourceWalletId
+      })
+      if (recipientWalletSelect.value === sourceWalletId) {
+        recipientWalletSelect.value = ''
+      }
+    }
+
+    document.querySelectorAll('input[name="transfer_mode"]').forEach((radio) => {
+      radio.addEventListener('change', updateTransferUI)
+    })
+
+    document.getElementById('id_recipient_friend').addEventListener('change', () => {
+      const selectedFriendId = document.getElementById('id_recipient_friend').value
+      if (selectedFriendId && friendDefaultWalletMap[selectedFriendId] === false) {
+        const input = document.getElementById('id_recipient_friend')
+        input.classList.add('is-invalid')
+        document.getElementById('error_recipient_friend').textContent = 'Wybrany znajomy nie ma domyslnego portfela. Nie mozna wyslac przelewu.'
+      } else {
+        document.getElementById('id_recipient_friend').classList.remove('is-invalid')
+        document.getElementById('error_recipient_friend').textContent = ''
+      }
     })
 
     // ── Entry mode ───────────────────────────────────────────────────────────
@@ -241,12 +331,14 @@
         document.getElementById('submitBtn').className = cfg.btnClass
         document.getElementById('submitBtn').textContent = cfg.btnText
         document.getElementById('totalAmount').className = cfg.totalClass
+        updateTransferUI()
         recalcTotal()
       })
     })
 
     updateCurrency()
     updateEntryModeUI()
+    updateTransferUI()
     
     // ── Date ─────────────────────────────────────────────────────────────────
     ;(function setDefaultDate() {
@@ -276,7 +368,7 @@
       }
 
       const type = document.querySelector('input[name="type"]:checked').value
-      if (type === 'expense') {
+      if (type === 'expense' || type === 'transfer') {
         total = -total
       }
 
@@ -365,6 +457,33 @@
       const btn = document.getElementById('submitBtn')
       const cfg = typeConfig[type]
       const mode = getEntryMode()
+
+      if (type === 'transfer') {
+        const transferMode = getTransferMode()
+
+        if (transferMode === 'internal') {
+          const recipientWallet = document.getElementById('id_recipient_wallet').value
+          if (!recipientWallet) {
+            document.getElementById('id_recipient_wallet').classList.add('is-invalid')
+            document.getElementById('error_recipient_wallet').textContent = 'Wybierz portfel odbiorcy.'
+            return
+          }
+        }
+
+        if (transferMode === 'external') {
+          const recipientFriend = document.getElementById('id_recipient_friend').value
+          if (!recipientFriend) {
+            document.getElementById('id_recipient_friend').classList.add('is-invalid')
+            document.getElementById('error_recipient_friend').textContent = 'Wybierz znajomego odbiorce.'
+            return
+          }
+          if (friendDefaultWalletMap[recipientFriend] === false) {
+            document.getElementById('id_recipient_friend').classList.add('is-invalid')
+            document.getElementById('error_recipient_friend').textContent = 'Wybrany znajomy nie ma domyslnego portfela. Nie mozna wyslac przelewu.'
+            return
+          }
+        }
+      }
     
       const items = []
 
@@ -388,7 +507,7 @@
 
           let numericAmount = amount === '' ? null : parseFloat(amount)
 
-          if (type === 'expense' && numericAmount !== null) {
+          if ((type === 'expense' || type === 'transfer') && numericAmount !== null) {
             numericAmount = -numericAmount
           }
 
@@ -405,6 +524,9 @@
         description: document.getElementById('id_description').value,
         type,
         transaction_date: document.getElementById('id_transaction_date').value,
+        transfer_mode: type === 'transfer' ? getTransferMode() : null,
+        recipient_wallet: type === 'transfer' && getTransferMode() === 'internal' ? document.getElementById('id_recipient_wallet').value : null,
+        recipient_friend: type === 'transfer' && getTransferMode() === 'external' ? document.getElementById('id_recipient_friend').value : null,
         items
       }
     
@@ -437,6 +559,9 @@
       document.getElementById('globalError').classList.add('d-none')
       document.getElementById('error_items').textContent = ''
       document.getElementById('error_simple_amount').textContent = ''
+      document.getElementById('error_transfer_mode').textContent = ''
+      document.getElementById('error_recipient_wallet').textContent = ''
+      document.getElementById('error_recipient_friend').textContent = ''
     }
     
     function showErrors(errors) {
@@ -445,6 +570,20 @@
         const feedback = document.getElementById(`error_${field}`)
         if (input) input.classList.add('is-invalid')
         if (feedback) feedback.textContent = messages.join(' ')
+      }
+
+      if (errors.transfer_mode) {
+        document.getElementById('error_transfer_mode').textContent = errors.transfer_mode.join(' ')
+      }
+
+      if (errors.recipient_wallet) {
+        document.getElementById('id_recipient_wallet').classList.add('is-invalid')
+        document.getElementById('error_recipient_wallet').textContent = errors.recipient_wallet.join(' ')
+      }
+
+      if (errors.recipient_friend) {
+        document.getElementById('id_recipient_friend').classList.add('is-invalid')
+        document.getElementById('error_recipient_friend').textContent = errors.recipient_friend.join(' ')
       }
     
       // Errors for specific items

@@ -5,7 +5,7 @@ from apps.wallets.models import Wallet
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ["wallet", "title", "description", "type", "transaction_date"]
+        fields = ["wallet", "title", "description", "type", "transaction_date", "transfer_mode", "recipient_wallet", "recipient_friend"]
         widgets = {
             "wallet": forms.Select(attrs={
                 "class": "form-select form-select-lg",
